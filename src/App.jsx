@@ -1,52 +1,49 @@
-import { Component, useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
-import CardList from "./components/Card-List";
+import CardList from "./components/CardList";
 import SearchBox from "./components/SearchBox";
 
-class App extends Component {
-  constructor() {
-    super();
-    this.state = {
-      monsters: [],
-      searchString: "",
-    };
-    console.log("constructor");
-  }
+const App = () => {
+  const [searchString, setSearchString] = useState("");
+  const [monsters, setMonsters] = useState([]);
+  const [filteredMonsters, setFilteredMonsters] = useState([]);
 
-  componentDidMount() {
-    fetch("https://jsonplaceholder.typicode.com/users")
-      .then((response) => response.json())
-      .then((users) =>
-        this.setState(() => {
-          return { monsters: users };
-        })
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const response = await fetch(
+        "https://jsonplaceholder.typicode.com/users"
       );
-    console.log("ComponentDidMount");
-  }
-
-  render() {
-    console.log("Render");
-    const filteredMonsters = this.state.monsters.filter((m) => {
-      return m.name.toLowerCase().includes(this.state.searchString);
-    });
-    const handleSearchStringChange = (event) => {
-      const searchString = event.target.value.toLocaleLowerCase();
-      this.setState(() => {
-        return { searchString };
-      });
+      const users = await response.json();
+      setMonsters(users);
     };
+    fetchUsers();
+  }, []);
 
-    return (
-      <div className="App">
-        <SearchBox
-          className="search-box"
-          placeHolder="Search Monsters"
-          handleSearchStringChange={handleSearchStringChange}
-        />
-        <CardList monsters={filteredMonsters} />
-      </div>
+  useEffect(() => {
+    setFilteredMonsters(
+      monsters.filter((monster) =>
+        monster.name
+          .toLocaleLowerCase()
+          .includes(searchString.toLocaleLowerCase())
+      )
     );
-  }
-}
+  }, [monsters, searchString]);
+
+  const handleSearchStringChange = (event) => {
+    setSearchString(event.target.value);
+  };
+
+  return (
+    <>
+      <h1>Monsters</h1>
+      <SearchBox
+        className="search-box"
+        placeHolder="search monsters"
+        handleSearchStringChange={handleSearchStringChange}
+      />
+      <CardList monsters={filteredMonsters}></CardList>
+    </>
+  );
+};
 
 export default App;
